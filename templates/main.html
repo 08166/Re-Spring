@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원 관리 시스템</title>
+</head>
+<body>
+    <div id="memberRegistration">회원 등록</div>
+    <button onclick="goToMemberRegistration()">회원 등록 페이지로 이동</button>
+
+    <div id="centerEntry">센터 입장</div>
+    <button onclick="goToCenterEntry()">센터 입장 페이지로 이동</button>
+
+    <script>
+        function goToMemberRegistration() {
+            // 회원 등록 페이지의 URL로 변경해주세요
+            window.location.href = 'memberRegistrationURL.html';
+        }
+
+        function goToCenterEntry() {
+            // 센터 입장 페이지의 URL로 변경해주세요
+            window.location.href = 'centerEntryURL.html';
+        }
+    </script>
+</body>
+</html>
