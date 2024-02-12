@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>센터 입장</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* 버튼 사이의 간격 */
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 32px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+    
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #webcam {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>센터 입장</h2>
+    <video id="webcam" width="640" height="480" autoplay></video><br>
+    <div class="buttons">
+        <button onclick="recognizeFace()">입장 확인</button>
+        <button onclick="goToMainPage()">돌아가기</button>
+    </div>
+    <script>
+        async function startWebcam() {
+            const constraints = { video: true };
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('webcam');
+                video.srcObject = stream;
+            } catch (err) {
+                console.error('웹캠 시작 중 오류:', err);
+            }
+        }
+
+        async function recognizeFace() {
+            const video = document.getElementById('webcam');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+            const formData = new FormData();
+            formData.append("image", blob);
+
+            try {
+                const response = await fetch('/recognize_face', {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (!response.ok) {
+                    throw new Error('서버에서 얼굴을 인식하지 못했습니다.');
+                    }
+                const result = await response.json();
+                alert(result.message);
+            } catch (error) {
+                console.error('입장 확인 중 오류:', error);
+                alert('입장 확인 실패');
+            }
+        }
+        function goToMainPage() {
+            location.href = '/'; // 메인 페이지로 리디렉션
+        }
+
+        window.onload = startWebcam;
+    </script>
+</body>
+</html>

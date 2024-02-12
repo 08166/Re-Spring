@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원 등록</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* 버튼 사이의 간격 */
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 32px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+    
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #webcam {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>회원 등록</h2>
+    <video id="webcam" width="640" height="480" autoplay></video><br>
+    회원 이름 + 전화번호 뒷 4자리 <input id="userIdInput" type="text"><br>
+    <div class="buttons">
+        <button onclick="takeAndRegisterPicture()">회원 등록</button>
+        <button onclick="goToMainPage()">돌아가기</button>
+    </div>
+
+    <script>
+        async function startWebcam() {
+            const constraints = { video: true };
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('webcam');
+                video.srcObject = stream;
+            } catch (err) {
+                console.error('웹캠 시작 중 오류:', err);
+            }
+        }
+
+        async function takeAndRegisterPicture() {
+
+            const userInput = document.getElementById('userIdInput').value; // 올바른 변수명 사용
+            const namePattern = /^[가-힣a-zA-Z]+$/; // 이름 검증을 위한 정규 표현식 (한글 또는 영문자만 허용)
+            const phonePattern = /\d{4}$/; // 전화번호 뒷 4자리 숫자 검증을 위한 정규 표현식
+            // const splitInput = userIdInput.split('+'); // '+' 기호를 기준으로 입력값 분리
+            // 입력값에서 마지막 4자리 숫자를 전화번호 뒷자리로, 나머지를 이름으로 분리
+            const phone = userInput.slice(-4);
+            const name = userInput.slice(0, -4);
+                // 이름과 전화번호 뒷자리 검증
+            if (!namePattern.test(name) || !phonePattern.test(phone)) {
+                alert('이름은 한글 또는 영문자, 전화번호 뒷자리는 4자리 숫자여야 합니다.');
+                return; // 조건에 맞지 않으면 여기서 함수 종료
+            }
+
+            const userId = `${name}${phone}`; // 서버로 전송할 user_id 생성
+            // const userId = document.getElementById('userIdInput').value;
+            const video = document.getElementById('webcam');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+            const formData = new FormData();
+            formData.append("user_id", userId);
+            formData.append("image", blob, `${userId}.jpg`);
+
+            try {
+                const response = await fetch('/register_face', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const result = await response.json();
+        //         alert(result.message);
+        //     } catch (error) {
+        //         console.error('회원 등록 중 오류:', error);
+        //         alert('회원 등록 실패');
+        //     }
+        // }
+               // 서버로부터의 응답에 따라 다른 메시지 출력
+               if (response.ok) {
+            alert(result.message); // 성공 메시지
+        } else {
+            throw new Error(result.message); // 서버에서 정의한 에러 메시지
+        }
+    } catch (error) {
+        console.error('회원 등록 중 오류:', error);
+        alert(error.message); // 에러 처리
+    }
+}
+        function goToMainPage() {
+            location.href = '/'; // 메인 페이지로 리디렉션
+        }
+
+        window.onload = startWebcam;
+    </script>
+</body>
+</html>
